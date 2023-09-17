@@ -1,13 +1,14 @@
 package com.example
 
+import android.content.Intent
 import androidx.appcompat.app.AppCompatActivity
 import android.os.Bundle
 import androidx.appcompat.app.AppCompatDelegate
 import androidx.fragment.app.Fragment
-import com.example.Fragments.FragmentHome
-import com.example.Fragments.FragmentPost
-import com.example.Fragments.FragmentProfile
-import com.example.Fragments.FragmentSearch
+import com.example.fragments.FragmentHome
+import com.example.fragments.FragmentPost
+import com.example.fragments.FragmentProfile
+import com.example.fragments.FragmentSearch
 import com.example.socialmediaapp.R
 import com.example.socialmediaapp.databinding.ActivityMainBinding
 
@@ -31,6 +32,12 @@ class MainActivity : AppCompatActivity() {
                 else -> setFragContainer(FragmentHome())
             }
             true
+        }
+        
+        binding.appToolbar.ivMessageIcon.setOnClickListener {
+            val intent = Intent(this, ChatActivity::class.java).also {
+                startActivity(it)
+            }
         }
     }
 

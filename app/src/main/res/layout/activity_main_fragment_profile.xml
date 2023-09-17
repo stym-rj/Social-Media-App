@@ -4,7 +4,7 @@
     xmlns:tools="http://schemas.android.com/tools"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
-    tools:context="com.example.Fragments.FragmentPost">
+    tools:context="com.example.fragments.FragmentProfile">
 
     <!-- TODO: Update blank fragment layout -->
     <TextView
@@ -15,6 +15,6 @@
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintBottom_toBottomOf="parent"
-        android:text="Post Fragment" />
+        android:text="Profile Fragment" />
 
 </androidx.constraintlayout.widget.ConstraintLayout>

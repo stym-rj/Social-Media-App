@@ -13,6 +13,11 @@
         android:theme="@style/Theme.SocialMediaApp"
         tools:targetApi="31">
         <activity
+            android:name="com.example.ChatActivity"
+            android:exported="false"
+            android:label="@string/title_activity_chat2"
+            android:theme="@style/Theme.SocialMediaApp" />
+        <activity
             android:name="com.example.MainActivity"
             android:exported="true">
             <intent-filter>
