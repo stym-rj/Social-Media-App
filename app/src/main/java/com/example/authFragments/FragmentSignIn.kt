@@ -36,6 +36,7 @@ class FragmentSignIn : Fragment() {
         val view = binding.root
 
         auth = FirebaseAuth.getInstance()
+        Log.d("withoutSignIn", auth.currentUser?.uid.toString())
 
         binding.btnSignIn.setOnClickListener {
             // fetching email and pass from UI
@@ -64,8 +65,9 @@ class FragmentSignIn : Fragment() {
                     .addOnCompleteListener(requireActivity()) { task ->
                         if (task.isSuccessful) {
                             // intent
-                            val intent = Intent(activity, MainActivity::class.java)
-                            startActivity(intent)
+                            activity?.startActivity(Intent(activity, MainActivity::class.java))
+//                            startActivity(intent)
+                            activity?.finish()
                         } else {
                             Log.d("auth", "error : ${task.exception}")
                             when(task.exception) {

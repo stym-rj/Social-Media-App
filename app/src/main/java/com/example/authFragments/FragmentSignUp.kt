@@ -2,22 +2,27 @@ package com.example.authFragments
 
 import android.content.Intent
 import android.os.Bundle
+import android.util.Log
 import androidx.fragment.app.Fragment
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
 import android.widget.Toast
 import com.example.MainActivity
+import com.example.data.User
 import com.example.socialmediaapp.R
 import com.example.socialmediaapp.databinding.ActivityAuthenticationFragmentSignUpBinding
 import com.google.firebase.auth.FirebaseAuth
 import com.google.firebase.auth.FirebaseAuthInvalidCredentialsException
+import com.google.firebase.firestore.FirebaseFirestore
 
 class FragmentSignUp : Fragment() {
 
     private val binding by lazy {
         ActivityAuthenticationFragmentSignUpBinding.inflate(layoutInflater)
     }
+
+    private lateinit var mFirestore: FirebaseFirestore
 
     private lateinit var auth: FirebaseAuth
     override fun onCreateView(
@@ -26,17 +31,33 @@ class FragmentSignUp : Fragment() {
     ): View? {
 
         auth = FirebaseAuth.getInstance()
+        mFirestore = FirebaseFirestore.getInstance()
 
         binding.btnSignUp.setOnClickListener {
             if (checkFields()) {
                 auth.createUserWithEmailAndPassword(binding.tietEmail.text.toString(), binding.tietPassword.text.toString())
-                    .addOnCompleteListener(requireActivity()) { task ->
-                        if (task.isSuccessful) {
-                            Toast.makeText(requireContext(), "Sign Up successful!", Toast.LENGTH_SHORT).show()
-                            Intent(requireActivity(), MainActivity::class.java).also {
-                                startActivity(it)
-                            }
-                        } else if (task.exception is FirebaseAuthInvalidCredentialsException) {
+                    .addOnSuccessListener { result ->
+                        Toast.makeText(requireContext(), "Sign Up successful!", Toast.LENGTH_SHORT).show()
+
+                            // add this user in fire-store
+                            mFirestore
+                                .collection("Users")
+                                .document(result.user?.uid ?: "docTypeUser")
+                                .set(
+                                    User(fullName = binding.tietName.text.toString(),
+                                    eMail = binding.tietEmail.text.toString()
+                                ))
+                                .addOnSuccessListener {
+                                    // starting home intent
+                                    activity?.startActivity(Intent(requireActivity(), MainActivity::class.java))
+                                    activity?.finish()
+                                }
+                                .addOnFailureListener {
+                                    Toast.makeText(activity, it.message, Toast.LENGTH_SHORT).show()
+                                }
+                        }
+                    .addOnFailureListener {
+                        if (it is FirebaseAuthInvalidCredentialsException) {
                             Toast.makeText(
                                 requireContext(),
                                 "Oops! Invalid Email!",

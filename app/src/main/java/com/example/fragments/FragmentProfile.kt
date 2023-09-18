@@ -6,14 +6,24 @@ import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
 import com.example.socialmediaapp.R
+import com.example.socialmediaapp.databinding.ActivityMainFragmentProfileBinding
 
 class FragmentProfile : Fragment() {
+
+    private val binding by lazy {
+        ActivityMainFragmentProfileBinding.inflate(layoutInflater)
+    }
     override fun onCreateView(
         inflater: LayoutInflater, container: ViewGroup?,
         savedInstanceState: Bundle?
     ): View? {
-        // Inflate the layout for this fragment
-        return inflater.inflate(R.layout.activity_main_fragment_profile, container, false)
+
+
+
+
+
+
+        return binding.root
 
 
     }

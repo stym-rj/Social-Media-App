@@ -61,4 +61,11 @@ dependencies {
     implementation("com.google.firebase:firebase-auth-ktx")
 
     implementation("com.google.firebase:firebase-analytics-ktx")
+
+    // fire-store
+    implementation("com.google.firebase:firebase-firestore-ktx")
+
+    // for round round images XD
+    implementation("androidx.appcompat:appcompat:1.7.0-alpha03")
+    implementation("androidx.cardview:cardview:1.0.0")
 }
