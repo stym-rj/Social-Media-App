@@ -28,9 +28,10 @@
                         </option>
                         <option name="values">
                           <map>
+                            <entry key="assetSourceType" value="FILE" />
                             <entry key="color" value="508dd6" />
-                            <entry key="outputName" value="ic_message" />
-                            <entry key="sourceFile" value="D:\coding\AADK3\The Social Media App" />
+                            <entry key="outputName" value="ic_signin" />
+                            <entry key="sourceFile" value="D:\coding\AADK3\The Social Media App\illustrator\signin.svg" />
                           </map>
                         </option>
                       </PersistentState>

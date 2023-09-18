@@ -1,0 +1,29 @@
+{
+  "project_info": {
+    "project_number": "515502970254",
+    "project_id": "social-media-app-bcfa9",
+    "storage_bucket": "social-media-app-bcfa9.appspot.com"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:515502970254:android:1aa5988fca97243fc240df",
+        "android_client_info": {
+          "package_name": "com.example.socialmediaapp"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyAlW-XfegRqjnxMMxoBQoRPeVcWpK8ikKk"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}

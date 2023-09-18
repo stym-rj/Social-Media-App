@@ -13,19 +13,26 @@
         android:theme="@style/Theme.SocialMediaApp"
         tools:targetApi="31">
         <activity
-            android:name="com.example.ChatActivity"
-            android:exported="false"
-            android:label="@string/title_activity_chat2"
-            android:theme="@style/Theme.SocialMediaApp" />
-        <activity
-            android:name="com.example.MainActivity"
-            android:exported="true">
+            android:name="com.example.AuthenticationActivity"
+            android:exported="true"
+            android:label="@string/title_activity_authentication"
+            android:theme="@style/Theme.SocialMediaApp">
             <intent-filter>
                 <action android:name="android.intent.action.MAIN" />
 
                 <category android:name="android.intent.category.LAUNCHER" />
             </intent-filter>
         </activity>
+        <activity
+            android:name="com.example.ChatActivity"
+            android:exported="false"
+            android:label="@string/title_activity_chat2"
+            android:theme="@style/Theme.SocialMediaApp" />
+        <activity
+            android:name="com.example.MainActivity"
+            android:exported="false"
+            android:label="MainActivity"
+            android:theme="@style/Theme.SocialMediaApp" />
     </application>
 
 </manifest>

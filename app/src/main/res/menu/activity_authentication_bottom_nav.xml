@@ -1,0 +1,11 @@
+<?xml version="1.0" encoding="utf-8"?>
+<menu xmlns:android="http://schemas.android.com/apk/res/android">
+    <item
+        android:id="@+id/bottomNavSignIn"
+        android:title="Sign In"
+        android:icon="@drawable/ic_signin"/>
+    <item
+        android:id="@+id/bottomNavSignUp"
+        android:title="Sign Up"
+        android:icon="@drawable/ic_signup"/>
+</menu>
