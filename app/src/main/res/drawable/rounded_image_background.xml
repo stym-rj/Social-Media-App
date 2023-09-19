@@ -1,5 +1,8 @@
 <?xml version="1.0" encoding="utf-8"?>
-<shape xmlns:android="http://schemas.android.com/apk/res/android">
-    <solid android:color="#FFFFFF" /> <!-- Change to the background color you desire -->
-    <corners android:radius="248dp" /> <!-- Half of the ImageView's width/height to make it perfectly round -->
+<shape xmlns:android="http://schemas.android.com/apk/res/android"
+    android:shape="oval">
+    <stroke android:color="@color/black"
+        android:width="4dp"/>
+
+    <solid android:color="#FFFFFF" /><corners android:radius="248dp" /> <!-- Half of the ImageView's width/height to make it perfectly round -->
 </shape>

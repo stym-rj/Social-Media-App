@@ -1,0 +1,19 @@
+<!-- res/drawable/shimmer_frame3.xml -->
+<layer-list xmlns:android="http://schemas.android.com/apk/res/android">
+    <!-- Background color (optional) -->
+    <item android:drawable="@color/black" />
+
+    <!-- Shimmer gradient -->
+    <item android:left="10dp" android:right="10dp">
+        <shape xmlns:android="http://schemas.android.com/apk/res/android">
+            <gradient
+                android:type="linear"
+                android:angle="0"
+                android:startColor="#E0E0E0"
+            android:centerColor="#D0D0D0"
+            android:endColor="#E0E0E0"
+            android:gradientRadius="0">
+        </gradient>
+    </shape>
+</item>
+    </layer-list>

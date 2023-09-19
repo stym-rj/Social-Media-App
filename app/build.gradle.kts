@@ -65,7 +65,9 @@ dependencies {
     // fire-store
     implementation("com.google.firebase:firebase-firestore-ktx")
 
-    // for round round images XD
-    implementation("androidx.appcompat:appcompat:1.7.0-alpha03")
-    implementation("androidx.cardview:cardview:1.0.0")
+    // firebase storage
+    implementation("com.google.firebase:firebase-storage-ktx")
+
+    // glide
+    implementation("com.github.bumptech.glide:glide:4.16.0")
 }
