@@ -45,7 +45,7 @@ class FragmentSignUp : Fragment() {
                                 .document(result.user?.uid ?: "docTypeUser")
                                 .set(
                                     User(fullName = binding.tietName.text.toString(),
-                                    eMail = binding.tietEmail.text.toString()
+                                    email = binding.tietEmail.text.toString()
                                 ))
                                 .addOnSuccessListener {
                                     // starting home intent
