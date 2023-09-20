@@ -6,6 +6,7 @@ import androidx.fragment.app.Fragment
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
+import android.widget.Toast
 import androidx.activity.result.PickVisualMediaRequest
 import androidx.activity.result.contract.ActivityResultContracts
 import com.bumptech.glide.Glide
@@ -21,11 +22,17 @@ import com.google.firebase.storage.FirebaseStorage
 import com.google.firebase.storage.StorageReference
 import java.net.URI
 import java.util.UUID
+import kotlin.concurrent.thread
 
 class FragmentProfile : Fragment() {
 
     private val binding by lazy {
         ActivityMainFragmentProfileBinding.inflate(layoutInflater)
+    }
+
+
+    private val bottomSheetBinding by lazy {
+        ActivityMainFragmentProfileBottomSheetBinding.inflate(layoutInflater)
     }
 
     private lateinit var auth: FirebaseAuth
@@ -41,6 +48,9 @@ class FragmentProfile : Fragment() {
     private var chosenProfilePic: Uri? = null
     private val profileImagePicker = registerForActivityResult(ActivityResultContracts.PickVisualMedia()) { uri ->
         chosenProfilePic = uri
+        chosenProfilePic?.let {
+            setBottomSheetProfilePic(chosenProfilePic!!)
+        }
     }
 
     override fun onCreateView(
@@ -48,23 +58,28 @@ class FragmentProfile : Fragment() {
         savedInstanceState: Bundle?
     ): View? {
         val view = binding.root
+
+        // references from firebase
         mFireStore = FirebaseFirestore.getInstance()
-
         auth = FirebaseAuth.getInstance()
-
         imageReference = mFirebaseStorage.reference.child(Const.STORAGE_PROFILE_PIC)
-
         userReference = mFireStore.collection(Const.FS_USERS).document(auth.currentUser?.uid ?: "")
-        userReference.get()
-            .addOnSuccessListener { data ->
-                data.toObject(User::class.java)?.let {usr ->
-                    currentUser = usr
-                    setFragmentDetails()
-                }
-            }
-            .addOnFailureListener {
 
-            }
+
+
+        thread {
+            userReference.get()
+                .addOnSuccessListener { data ->
+                    data.toObject(User::class.java)?.let { usr ->
+                        currentUser = usr
+                        setFragmentDetails()
+                    }
+                }
+                .addOnFailureListener {
+                    Toast.makeText(requireContext(), "Something went wrong!", Toast.LENGTH_SHORT)
+                        .show()
+                }
+        }
 
         binding.btnEdit.setOnClickListener {
             showEditBottomSheet(binding)
@@ -73,6 +88,10 @@ class FragmentProfile : Fragment() {
 
 
         return view
+    }
+
+    private fun setBottomSheetProfilePic(chosenProfilePic: Uri) {
+        bottomSheetBinding.ivEditProfilePic.setImageURI(chosenProfilePic)
     }
 
     private fun setFragmentDetails() {
@@ -84,10 +103,10 @@ class FragmentProfile : Fragment() {
         binding.tvAbout.text = currentUser.about
         binding.tvFollowersSize.text = currentUser.followers.size.toString()
         binding.tvFollowingsSize.text = currentUser.followings.size.toString()
+        binding.tvPostSize.text = currentUser.posts.size.toString()
     }
 
     private fun showEditBottomSheet(binding: ActivityMainFragmentProfileBinding) {
-        val bottomSheetBinding = ActivityMainFragmentProfileBottomSheetBinding.inflate(layoutInflater)
         val dialog = BottomSheetDialog(requireContext())
         dialog.setContentView(bottomSheetBinding.root)
 

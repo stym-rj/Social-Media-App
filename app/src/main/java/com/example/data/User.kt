@@ -7,5 +7,5 @@ data class User (
     var followings: MutableList<String> = mutableListOf(),
     var followers: MutableList<String> = mutableListOf(),
     var profilePic: String = "",
-    val posts: MutableList<String> = mutableListOf()
+    val posts: MutableList<Post> = mutableListOf()
 )
