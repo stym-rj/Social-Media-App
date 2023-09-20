@@ -9,6 +9,7 @@ import android.view.ViewGroup
 import android.widget.Toast
 import androidx.activity.result.PickVisualMediaRequest
 import androidx.activity.result.contract.ActivityResultContracts
+import androidx.lifecycle.lifecycleScope
 import com.example.data.Post
 import com.example.data.User
 import com.example.socialmediaapp.databinding.ActivityMainFragmentPostBinding
@@ -18,6 +19,9 @@ import com.google.firebase.firestore.DocumentReference
 import com.google.firebase.firestore.FirebaseFirestore
 import com.google.firebase.storage.FirebaseStorage
 import com.google.firebase.storage.StorageReference
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.launch
+import kotlinx.coroutines.tasks.await
 import java.util.UUID
 
 class FragmentPost : Fragment() {
@@ -72,35 +76,34 @@ class FragmentPost : Fragment() {
 
         }
 
+
         binding.btnPost.setOnClickListener {
             if (chosenPhoto != null) {
-                // upload to Firebase
-                val ref = imageReference.child(UUID.randomUUID().toString())
-                ref.putFile(chosenPhoto!!)
-                    .addOnSuccessListener {
-                        ref.downloadUrl.addOnSuccessListener {
-                            currentUser.posts.add(
-                                Post(
-                                    imageUrl = it.toString(),
-                                    caption = binding.etCaption.text.toString()
-                                )
-                            )
-                            userReference.set(currentUser)
-                            Toast.makeText(requireContext(), "Posted Successfully!", Toast.LENGTH_SHORT).show()
-                        }
-                    }
-                    .addOnFailureListener {
-
-                    }
-
+                lifecycleScope.launch (Dispatchers.IO) {
+                    uploadImage(chosenPhoto!!, currentUser)
+                }
             } else {
                 binding.tvError.visibility = View.VISIBLE
             }
         }
 
-
-
         return view
+    }
 
+    private suspend fun uploadImage(chosenPhoto: Uri, currentUser: User) {
+        lifecycleScope.launch (Dispatchers.IO) {
+            val ref = imageReference.child(UUID.randomUUID().toString())
+            ref.putFile(chosenPhoto).await()
+            val uri = ref.downloadUrl.await()
+            currentUser.posts.add(
+                Post(
+                    imageUrl = uri.toString(),
+                    caption = binding.etCaption.text.toString(),
+                    createdAt = System.currentTimeMillis()
+                )
+            )
+            userReference.set(currentUser).await()
+            Toast.makeText(requireContext(), "Posted Successfully!", Toast.LENGTH_SHORT).show()
+        }
     }
 }
