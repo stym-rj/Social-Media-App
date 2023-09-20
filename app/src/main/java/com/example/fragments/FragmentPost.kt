@@ -6,15 +6,25 @@ import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
 import com.example.socialmediaapp.R
+import com.example.socialmediaapp.databinding.ActivityMainFragmentPostBinding
 
 class FragmentPost : Fragment() {
+
+    private val binding by lazy {
+        ActivityMainFragmentPostBinding.inflate(layoutInflater)
+    }
     override fun onCreateView(
         inflater: LayoutInflater, container: ViewGroup?,
         savedInstanceState: Bundle?
     ): View? {
-        // Inflate the layout for this fragment
-        return inflater.inflate(R.layout.activity_main_fragment_post, container, false)
 
+        val view = binding.root
+
+
+
+
+
+        return view
 
     }
 }
