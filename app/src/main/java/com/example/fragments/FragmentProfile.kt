@@ -2,7 +2,6 @@ package com.example.fragments
 
 import android.net.Uri
 import android.os.Bundle
-import android.util.Log
 import androidx.fragment.app.Fragment
 import android.view.LayoutInflater
 import android.view.View
@@ -11,7 +10,6 @@ import androidx.activity.result.PickVisualMediaRequest
 import androidx.activity.result.contract.ActivityResultContracts
 import com.bumptech.glide.Glide
 import com.example.data.User
-import com.example.socialmediaapp.R
 import com.example.socialmediaapp.databinding.ActivityMainFragmentProfileBinding
 import com.example.socialmediaapp.databinding.ActivityMainFragmentProfileBottomSheetBinding
 import com.example.utils.Const
@@ -60,15 +58,6 @@ class FragmentProfile : Fragment() {
         userReference.get()
             .addOnSuccessListener { data ->
                 data.toObject(User::class.java)?.let {usr ->
-//                    if (usr.profilePic.isNotBlank()) {
-//                        // load to iv
-//                        Glide.with(this).load(usr.profilePic).into(binding.ivProfilePic)
-//                    }
-//                    binding.tvName.text = usr.fullName
-//                    binding.tvAbout.text = usr.about
-//                    binding.tvFollowersSize.text = usr.followers.size.toString()
-//                    binding.tvFollowingsSize.text = usr.followings.size.toString()
-
                     currentUser = usr
                     setFragmentDetails()
                 }
