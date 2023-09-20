@@ -9,6 +9,7 @@ import android.view.ViewGroup
 import android.widget.Toast
 import androidx.activity.result.PickVisualMediaRequest
 import androidx.activity.result.contract.ActivityResultContracts
+import androidx.lifecycle.lifecycleScope
 import com.bumptech.glide.Glide
 import com.example.data.User
 import com.example.socialmediaapp.databinding.ActivityMainFragmentProfileBinding
@@ -20,6 +21,8 @@ import com.google.firebase.firestore.DocumentReference
 import com.google.firebase.firestore.FirebaseFirestore
 import com.google.firebase.storage.FirebaseStorage
 import com.google.firebase.storage.StorageReference
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.launch
 import java.net.URI
 import java.util.UUID
 import kotlin.concurrent.thread
@@ -63,11 +66,19 @@ class FragmentProfile : Fragment() {
         mFireStore = FirebaseFirestore.getInstance()
         auth = FirebaseAuth.getInstance()
         imageReference = mFirebaseStorage.reference.child(Const.STORAGE_PROFILE_PIC)
+
+        binding.btnEdit.setOnClickListener {
+            showEditBottomSheet(binding)
+        }
+
+        return view
+    }
+
+    override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
+        super.onViewCreated(view, savedInstanceState)
+
         userReference = mFireStore.collection(Const.FS_USERS).document(auth.currentUser?.uid ?: "")
-
-
-
-        thread {
+        lifecycleScope.launch(Dispatchers.IO) {
             userReference.get()
                 .addOnSuccessListener { data ->
                     data.toObject(User::class.java)?.let { usr ->
@@ -80,14 +91,6 @@ class FragmentProfile : Fragment() {
                         .show()
                 }
         }
-
-        binding.btnEdit.setOnClickListener {
-            showEditBottomSheet(binding)
-        }
-
-
-
-        return view
     }
 
     private fun setBottomSheetProfilePic(chosenProfilePic: Uri) {
