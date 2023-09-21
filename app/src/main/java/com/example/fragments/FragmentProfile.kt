@@ -6,15 +6,19 @@ import androidx.fragment.app.Fragment
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
+import android.widget.GridLayout
 import android.widget.Toast
 import androidx.activity.result.PickVisualMediaRequest
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.lifecycle.lifecycleScope
+import androidx.recyclerview.widget.GridLayoutManager
+import androidx.recyclerview.widget.RecyclerView
 import com.bumptech.glide.Glide
 import com.example.data.User
 import com.example.socialmediaapp.databinding.ActivityMainFragmentProfileBinding
 import com.example.socialmediaapp.databinding.ActivityMainFragmentProfileBottomSheetBinding
 import com.example.utils.Const
+import com.example.utils.ProfileFragPostAdapter
 import com.google.android.material.bottomsheet.BottomSheetDialog
 import com.google.firebase.auth.FirebaseAuth
 import com.google.firebase.firestore.DocumentReference
@@ -71,6 +75,7 @@ class FragmentProfile : Fragment() {
             showEditBottomSheet(binding)
         }
 
+
         return view
     }
 
@@ -84,6 +89,15 @@ class FragmentProfile : Fragment() {
                     data.toObject(User::class.java)?.let { usr ->
                         currentUser = usr
                         setFragmentDetails()
+                        // setting up the recycler view
+                        val adapter = ProfileFragPostAdapter(currentUser.posts, requireContext())
+                        binding.rv.layoutManager = GridLayoutManager(
+                            requireContext(),
+                            3,
+                            RecyclerView.VERTICAL,
+                            false
+                        )
+                        binding.rv.adapter = adapter
                     }
                 }
                 .addOnFailureListener {

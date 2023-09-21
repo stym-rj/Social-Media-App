@@ -10,8 +10,10 @@ import android.widget.Toast
 import androidx.activity.result.PickVisualMediaRequest
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.lifecycle.lifecycleScope
+import com.example.MainActivity
 import com.example.data.Post
 import com.example.data.User
+import com.example.socialmediaapp.R
 import com.example.socialmediaapp.databinding.ActivityMainFragmentPostBinding
 import com.example.utils.Const
 import com.google.firebase.auth.FirebaseAuth
@@ -36,6 +38,7 @@ class FragmentPost : Fragment() {
     }
     private lateinit var userReference: DocumentReference
     private lateinit var imageReference: StorageReference
+    private lateinit var currentUser: User
 
     override fun onCreateView(
         inflater: LayoutInflater, container: ViewGroup?,
@@ -51,7 +54,6 @@ class FragmentPost : Fragment() {
         userReference = mFireStore.collection(Const.FS_USERS).document(auth.currentUser?.uid ?: "")
 
 
-        lateinit var currentUser: User
         userReference.get()
             .addOnSuccessListener { data->
                 data.toObject(User::class.java)?.let {
@@ -80,7 +82,7 @@ class FragmentPost : Fragment() {
         binding.btnPost.setOnClickListener {
             if (chosenPhoto != null) {
                 lifecycleScope.launch (Dispatchers.IO) {
-                    uploadImage(chosenPhoto!!, currentUser)
+                    uploadImage(chosenPhoto!!)
                 }
             } else {
                 binding.tvError.visibility = View.VISIBLE
@@ -90,7 +92,7 @@ class FragmentPost : Fragment() {
         return view
     }
 
-    private suspend fun uploadImage(chosenPhoto: Uri, currentUser: User) {
+    private suspend fun uploadImage(chosenPhoto: Uri) {
         lifecycleScope.launch (Dispatchers.IO) {
             val ref = imageReference.child(UUID.randomUUID().toString())
             ref.putFile(chosenPhoto).await()
@@ -102,8 +104,12 @@ class FragmentPost : Fragment() {
                     createdAt = System.currentTimeMillis()
                 )
             )
-            userReference.set(currentUser).await()
-            Toast.makeText(requireContext(), "Posted Successfully!", Toast.LENGTH_SHORT).show()
+            userReference.set(currentUser).addOnSuccessListener {
+                Toast.makeText(context, "Posted Successfully!", Toast.LENGTH_SHORT).show()
+                binding.etCaption.text.clear()
+                binding.ivPhoto.setImageResource(R.mipmap.default_profile_pic)
+            }.await()
+
         }
     }
 }
