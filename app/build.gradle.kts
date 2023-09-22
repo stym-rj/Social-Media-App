@@ -70,4 +70,7 @@ dependencies {
 
     // glide
     implementation("com.github.bumptech.glide:glide:4.16.0")
+
+    // image compressor
+    implementation("id.zelory:compressor:3.0.1")
 }

@@ -12,7 +12,7 @@
         android:scaleType="centerCrop"
         android:layout_marginTop="16dp"
         app:layout_constraintDimensionRatio="1:1"
-        android:src="@mipmap/default_profile_pic"
+        android:src="@mipmap/default_profile_pic_2"
         app:layout_constraintTop_toTopOf="parent"
         app:layout_constraintBottom_toBottomOf="@id/guideline2"
         app:layout_constraintStart_toStartOf="parent"

@@ -6,13 +6,14 @@
     tools:context="com.example.fragments.FragmentProfile">
 
 
-    <ImageView
+    <androidx.constraintlayout.utils.widget.ImageFilterView
         android:id="@+id/ivProfilePic"
         android:layout_width="0dp"
         android:layout_height="0dp"
-        android:src="@mipmap/default_profile_pic"
+        android:src="@mipmap/default_profile_pic_2"
         android:scaleType="centerCrop"
         android:layout_margin="8dp"
+        app:roundPercent="1"
         app:layout_constraintDimensionRatio="1:1"
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintTop_toTopOf="parent"

@@ -21,7 +21,7 @@ class ProfileFragPostViewHolder (
 }
 
 class ProfileFragPostAdapter (
-    private val uris: List<Post>,
+    private val posts: List<Post>,
     private val context: Context
 ) : Adapter<ProfileFragPostViewHolder>() {
     override fun onCreateViewHolder(parent: ViewGroup, viewType: Int): ProfileFragPostViewHolder {
@@ -29,10 +29,10 @@ class ProfileFragPostAdapter (
         return ProfileFragPostViewHolder(binding)
     }
 
-    override fun getItemCount() = uris.size
+    override fun getItemCount() = posts.size
 
     override fun onBindViewHolder(holder: ProfileFragPostViewHolder, position: Int) {
-        holder.bind(uris[position].imageUrl, context)
+        holder.bind(posts[position].imageUrl, context)
     }
 
 }
