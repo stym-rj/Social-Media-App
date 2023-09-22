@@ -55,6 +55,9 @@ class FragmentSearch : Fragment() {
             usersReference.get()
                 .addOnSuccessListener { data ->
                     for (user in data) {
+                        if (user.id == usersReference.document(auth.currentUser?.uid!!).id) {
+                            continue
+                        }
                         users.add(user.toObject(User::class.java))
 
                         Log.d("check", user.toObject(User::class.java).toString())
