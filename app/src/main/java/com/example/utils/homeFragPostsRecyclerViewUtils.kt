@@ -11,6 +11,10 @@ import com.example.data.Post
 import com.example.data.User
 import com.example.socialmediaapp.databinding.ActivityMainFragmentHomeListItemBinding
 import com.google.firebase.firestore.QueryDocumentSnapshot
+import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.launch
+import kotlinx.coroutines.withContext
 
 class PostsViewHolder (
     private val binding: ActivityMainFragmentHomeListItemBinding
@@ -32,36 +36,31 @@ class PostsViewHolder (
 }
 
 class PostsAdapter(
-    private var users: List<QueryDocumentSnapshot>,
-    private val context: Context
+    private var users: List<User>,
+    private val context: Context,
+    private var size: Int = 0,
+    private var userIndex: Int = 0,
+    private var postIndex: Int = 0
 ): Adapter<PostsViewHolder>() {
     override fun onCreateViewHolder(parent: ViewGroup, viewType: Int): PostsViewHolder {
         val binding = ActivityMainFragmentHomeListItemBinding.inflate(LayoutInflater.from(parent.context), parent, false)
         return PostsViewHolder(binding)
     }
 
-    override fun getItemCount(): Int {
-        var size = 0
-        for (user in users) {
-            user.toObject(User::class.java).let {
-                size += it.posts.size
-            }
-        }
-        return size
-    }
+    override fun getItemCount() = size
 
     override fun onBindViewHolder(holder: PostsViewHolder, position: Int) {
-        Log.d("check3", position.toString())
-        users[position].toObject(User::class.java).let {
-            for (post in it.posts) {
-                Log.d("check2", it.toString())
-                holder.bind(it, post, context)
-            }
+        holder.bind(users[userIndex], users[userIndex].posts[postIndex], context)
+        postIndex++
+        if (postIndex >= users[userIndex].posts.size) {
+            postIndex = 0
+            userIndex++
         }
     }
 
-    fun updateData(newList: MutableList<QueryDocumentSnapshot>) {
+    fun updateData(newList: MutableList<User>, newSize: Int) {
         users = newList
+        size = newSize
         notifyDataSetChanged()
     }
 }
