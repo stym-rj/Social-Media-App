@@ -9,13 +9,12 @@ import com.bumptech.glide.Glide
 import com.example.socialmediaapp.R
 import com.example.socialmediaapp.databinding.ActivityMainFragmentSearchPeopleItemsBinding
 import com.google.firebase.firestore.QueryDocumentSnapshot
-import com.google.firebase.firestore.auth.User
 
 class SearchFragViewHolder (
     private val binding: ActivityMainFragmentSearchPeopleItemsBinding
 ): ViewHolder(binding.root) {
     fun bind (user: QueryDocumentSnapshot, currentUserID: String, context: Context, listener: FollowButtonClickListener) {
-        user.toObject(com.example.data.User::class.java)?.let {
+        user.toObject(com.example.data.User::class.java).let {
             binding.tvName.text = it.fullName
             binding.tvEmail.text = it.email
             if (it.profilePic == "") {
