@@ -103,12 +103,14 @@ class FragmentHome : Fragment(), MyItemClickListener {
                     if (data.posts[indexOfPost].likes.contains(mAuth.currentUser?.uid)) {
                         withContext(Dispatchers.Main) {
                             binding.ivLike.setImageResource(R.drawable.ic_like_normal)
+                            binding.tvNoOfLikes.text = "${data.posts[indexOfPost].likes.size - 1} Likes"
                         }
                         data.posts[indexOfPost].likes.remove(mAuth.currentUser?.uid)
                     } else {
                         data.posts[indexOfPost].likes.add(mAuth.currentUser?.uid ?: "a")
                         withContext(Dispatchers.Main) {
                             binding.ivLike.setImageResource(R.drawable.ic_like_clicked)
+                            binding.tvNoOfLikes.text = "${data.posts[indexOfPost].likes.size} Likes"
                         }
                     }
 
