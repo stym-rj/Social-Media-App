@@ -46,8 +46,6 @@ class AuthenticationActivity : AppCompatActivity() {
             startActivity(Intent(this, MainActivity::class.java))
             finish()
         }
-
-
     }
 
     private fun setFrag(fragment: Fragment) {

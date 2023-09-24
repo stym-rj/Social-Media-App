@@ -1,7 +1,6 @@
 package com.example.utils
 
 import android.content.Context
-import android.util.Log
 import android.view.LayoutInflater
 import android.view.ViewGroup
 import androidx.recyclerview.widget.RecyclerView.Adapter
@@ -9,70 +8,78 @@ import androidx.recyclerview.widget.RecyclerView.ViewHolder
 import com.bumptech.glide.Glide
 import com.example.data.Post
 import com.example.data.User
+import com.example.socialmediaapp.R
 import com.example.socialmediaapp.databinding.ActivityMainFragmentHomeListItemBinding
-import com.google.firebase.firestore.QueryDocumentSnapshot
-import kotlinx.coroutines.CoroutineScope
-import kotlinx.coroutines.Dispatchers
-import kotlinx.coroutines.launch
-import kotlinx.coroutines.withContext
+import com.google.firebase.firestore.DocumentSnapshot
 
 class PostsViewHolder (
     private val binding: ActivityMainFragmentHomeListItemBinding
 ): ViewHolder(binding.root) {
-    fun bind(user: User, post: Post, context: Context, listener: MyItemClickListener) {
-        Log.d("check1", user.toString())
-        binding.tvName.text = user.fullName
-        Glide
-            .with(context)
-            .load(user.profilePic)
-            .into(binding.ivProfilePic)
-        Glide
-            .with(context)
-            .load(post.imageUrl)
-            .into(binding.ivPost)
-        binding.tvNoOfLikes.text = "${post.likes.size} Likes"
-        binding.tvCaption.text = post.caption
+    fun bind(user: DocumentSnapshot, post: Post, currUserID: String, context: Context, listener: MyItemClickListener) {
+        user.toObject(User::class.java)?.let { data->
+            Glide
+                .with(context)
+                .load(data.profilePic)
+                .into(binding.ivProfilePic)
+            Glide
+                .with(context)
+                .load(post.imageUrl)
+                .into(binding.ivPost)
 
-        // like button click listener
-        binding.ivLike.setOnClickListener {
-            listener.onLikeButtonClickListener(binding)
+            binding.tvName.text = data.fullName
+            binding.tvNoOfLikes.text = "${post.likes.size} Likes"
+            binding.tvCaption.text = post.caption
+
+            // like button state
+            if (post.likes.contains(currUserID)) {
+                binding.ivLike.setImageResource(R.drawable.ic_like_clicked)
+            } else {
+                binding.ivLike.setImageResource(R.drawable.ic_like_normal)
+            }
+
+            // like button click listener
+            binding.ivLike.setOnClickListener {
+                listener.onLikeButtonClickListener(user, data.posts.indexOf(post), binding)
+            }
         }
     }
 }
 
 class PostsAdapter(
-    private var users: List<QueryDocumentSnapshot>,
+    private var users: List<DocumentSnapshot>,
+    private var posts: List<Post>,
+    private val currUserID: String,
     private val context: Context,
     private val listener: MyItemClickListener,
-    private var size: Int = 0,
-    private var userIndex: Int = 0,
-    private var postIndex: Int = 0
 ): Adapter<PostsViewHolder>() {
     override fun onCreateViewHolder(parent: ViewGroup, viewType: Int): PostsViewHolder {
-        val binding = ActivityMainFragmentHomeListItemBinding.inflate(LayoutInflater.from(parent.context), parent, false)
+        val binding = ActivityMainFragmentHomeListItemBinding
+                            .inflate(
+                                LayoutInflater.from(parent.context),
+                                parent,
+                                false
+                            )
         return PostsViewHolder(binding)
     }
 
-    override fun getItemCount() = size
+    override fun getItemCount() = users.size
 
     override fun onBindViewHolder(holder: PostsViewHolder, position: Int) {
-        val user = users[userIndex].toObject(User::class.java)
-        holder.bind(user, user.posts[postIndex], context, listener)
-        postIndex++
-        if (postIndex >= user.posts.size) {
-            postIndex = 0
-            userIndex++
-        }
+        holder.bind(users[position], posts[position], currUserID, context, listener)
     }
 
-    fun updateData(newList: MutableList<QueryDocumentSnapshot>, newSize: Int) {
-        users = newList
-        size = newSize
+    fun updateData(newUsers: MutableList<DocumentSnapshot>, newPosts: MutableList<Post>) {
+        users = newUsers
+        posts = newPosts
         notifyDataSetChanged()
     }
 }
 
 
 interface MyItemClickListener {
-    fun onLikeButtonClickListener(binding: ActivityMainFragmentHomeListItemBinding)
+    fun onLikeButtonClickListener(
+        userRef: DocumentSnapshot,
+        indexOfPost: Int,
+        binding: ActivityMainFragmentHomeListItemBinding
+    )
 }

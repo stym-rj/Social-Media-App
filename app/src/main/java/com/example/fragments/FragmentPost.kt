@@ -11,6 +11,7 @@ import androidx.activity.result.PickVisualMediaRequest
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.lifecycle.lifecycleScope
 import com.example.MainActivity
+import com.example.data.IndividualPost
 import com.example.data.Post
 import com.example.data.User
 import com.example.socialmediaapp.R
@@ -72,10 +73,10 @@ class FragmentPost : Fragment() {
                 binding.tvError.visibility = View.GONE
             }
         }
+
         binding.btnSelectImage.setOnClickListener {
             // launching intent for picking image from gallery
             profileImagePicker.launch(PickVisualMediaRequest(ActivityResultContracts.PickVisualMedia.ImageOnly))
-
         }
 
 
@@ -97,19 +98,26 @@ class FragmentPost : Fragment() {
             val ref = imageReference.child(UUID.randomUUID().toString())
             ref.putFile(chosenPhoto).await()
             val uri = ref.downloadUrl.await()
-            currentUser.posts.add(
-                Post(
-                    imageUrl = uri.toString(),
-                    caption = binding.etCaption.text.toString(),
-                    createdAt = System.currentTimeMillis()
-                )
+            val post = Post(
+                imageUrl = uri.toString(),
+                caption = binding.etCaption.text.toString(),
+                createdAt = System.currentTimeMillis()
             )
+            currentUser.posts.add(post)
+
+            // setting the post in fireStore in user's account
             userReference.set(currentUser).addOnSuccessListener {
                 Toast.makeText(context, "Posted Successfully!", Toast.LENGTH_SHORT).show()
                 binding.etCaption.text.clear()
                 binding.ivPhoto.setImageResource(R.mipmap.default_profile_pic)
             }.await()
 
+            // setting the post in fireStore in 'posts' collection.
+            mFireStore.collection(Const.FS_POSTS).document(post.createdAt.toString())
+                .set(
+                    IndividualPost(post = post,
+                        userRef = auth.currentUser?.uid ?: "")
+                ).await()
         }
     }
 }

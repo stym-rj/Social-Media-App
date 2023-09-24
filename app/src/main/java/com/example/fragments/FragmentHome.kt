@@ -6,21 +6,22 @@ import androidx.fragment.app.Fragment
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
-import android.widget.Toast
 import androidx.lifecycle.lifecycleScope
 import androidx.recyclerview.widget.LinearLayoutManager
 import androidx.recyclerview.widget.RecyclerView
+import com.example.data.IndividualPost
+import com.example.data.Post
+import com.example.data.User
 import com.example.socialmediaapp.R
 import com.example.socialmediaapp.databinding.ActivityMainFragmentHomeBinding
 import com.example.socialmediaapp.databinding.ActivityMainFragmentHomeListItemBinding
 import com.example.utils.Const
 import com.example.utils.MyItemClickListener
 import com.example.utils.PostsAdapter
-import com.example.utils.SearchFragAdapter
 import com.google.firebase.auth.FirebaseAuth
+import com.google.firebase.firestore.DocumentSnapshot
 import com.google.firebase.firestore.FirebaseFirestore
-import com.google.firebase.firestore.QueryDocumentSnapshot
-import com.google.firebase.firestore.auth.User
+import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.tasks.await
@@ -31,7 +32,10 @@ class FragmentHome : Fragment(), MyItemClickListener {
         ActivityMainFragmentHomeBinding.inflate(layoutInflater)
     }
     private lateinit var mFireStore: FirebaseFirestore
-    private var users: MutableList<QueryDocumentSnapshot> = mutableListOf()
+    private var users: MutableList<DocumentSnapshot> = mutableListOf()
+    private val mAuth by lazy {
+        FirebaseAuth.getInstance()
+    }
     override fun onCreateView(
         inflater: LayoutInflater, container: ViewGroup?,
         savedInstanceState: Bundle?
@@ -40,40 +44,81 @@ class FragmentHome : Fragment(), MyItemClickListener {
 
         mFireStore = FirebaseFirestore.getInstance()
 
-        val adapter = PostsAdapter(users, requireContext(), this)
+        val posts: MutableList<Post> = mutableListOf()
+
+        val adapter = PostsAdapter(users, posts, mAuth.currentUser?.uid ?: "", requireContext(), this)
         binding.rv.layoutManager = LinearLayoutManager(requireContext(), RecyclerView.VERTICAL, false)
         binding.rv.adapter = adapter
 
+        // fire-store user's reference
         val usersRef = mFireStore.collection(Const.FS_USERS)
 
+        // fireStore post's reference
+        val postRef = mFireStore.collection(Const.FS_POSTS)
+
         lifecycleScope.launch(Dispatchers.IO) {
-            val updatedUsers: MutableList<QueryDocumentSnapshot> = mutableListOf()
-            var size = 0
 
-            usersRef.get()
+            postRef.get()
                 .addOnSuccessListener { data ->
-                    for (userSnapshot in data) {
-                        val user = userSnapshot.toObject(com.example.data.User::class.java)
-                        if (user.posts.size > 0) {
-                            size += user.posts.size
-                            updatedUsers.add(userSnapshot)
-                        }
-                    }
+                    val updatedUsers: MutableList<DocumentSnapshot> = mutableListOf()
+                    val updatedPosts: MutableList<Post> = mutableListOf()
 
-                    // After the loop is done, update the adapter with the updatedUsers list
-                    users.clear()  // Clear the old data
-                    users.addAll(updatedUsers)  // Add the updated data
-                    adapter.updateData(users, size)
+                    for (postSnapshot in data) {
+                        postSnapshot.toObject(IndividualPost::class.java).let { postData ->
+                            updatedPosts.add(postData.post)
+                            Log.d("check100", postData.userRef)
+                            CoroutineScope(Dispatchers.IO).launch {
+                                val userRequest = usersRef.document(postData.userRef).get().await()
+                                updatedUsers.add(userRequest)
+                                users.clear()
+                                posts.clear()
+                                users.addAll(updatedUsers)
+                                posts.addAll(updatedPosts)
+                                withContext(Dispatchers.Main) {
+                                    adapter.updateData(users, posts)
+                                }
+                            }
+                        }
+
+                    }
                 }
                 .addOnFailureListener {
-                    // Handle failure here
+
                 }
         }
 
         return view
     }
 
-    override fun onLikeButtonClickListener(binding: ActivityMainFragmentHomeListItemBinding) {
+    override fun onLikeButtonClickListener(
+        userRef: DocumentSnapshot,
+        indexOfPost: Int,
+        binding: ActivityMainFragmentHomeListItemBinding
+    ) {
         // add the user id when like button is clicked in post's likes.
+        CoroutineScope(Dispatchers.IO).launch {
+            val result = mFireStore.collection(Const.FS_USERS).document(userRef.id).get().await()
+
+            result.toObject(User::class.java)?.let { data ->
+                    if (data.posts[indexOfPost].likes.contains(mAuth.currentUser?.uid)) {
+                        withContext(Dispatchers.Main) {
+                            binding.ivLike.setImageResource(R.drawable.ic_like_normal)
+                        }
+                        data.posts[indexOfPost].likes.remove(mAuth.currentUser?.uid)
+                    } else {
+                        data.posts[indexOfPost].likes.add(mAuth.currentUser?.uid ?: "a")
+                        withContext(Dispatchers.Main) {
+                            binding.ivLike.setImageResource(R.drawable.ic_like_clicked)
+                        }
+                    }
+
+                val updatePost = IndividualPost(post = data.posts[indexOfPost], userRef = userRef.id)
+                mFireStore.collection(Const.FS_POSTS).document(data.posts[indexOfPost].createdAt.toString())
+                    .set(updatePost).await()
+
+                mFireStore.collection(Const.FS_USERS).document(userRef.id)
+                    .set(data).await()
+            }
+        }
     }
 }
