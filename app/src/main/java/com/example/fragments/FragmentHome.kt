@@ -12,7 +12,9 @@ import androidx.recyclerview.widget.LinearLayoutManager
 import androidx.recyclerview.widget.RecyclerView
 import com.example.socialmediaapp.R
 import com.example.socialmediaapp.databinding.ActivityMainFragmentHomeBinding
+import com.example.socialmediaapp.databinding.ActivityMainFragmentHomeListItemBinding
 import com.example.utils.Const
+import com.example.utils.MyItemClickListener
 import com.example.utils.PostsAdapter
 import com.example.utils.SearchFragAdapter
 import com.google.firebase.auth.FirebaseAuth
@@ -24,12 +26,12 @@ import kotlinx.coroutines.launch
 import kotlinx.coroutines.tasks.await
 import kotlinx.coroutines.withContext
 
-class FragmentHome : Fragment() {
+class FragmentHome : Fragment(), MyItemClickListener {
     private val binding by lazy {
         ActivityMainFragmentHomeBinding.inflate(layoutInflater)
     }
     private lateinit var mFireStore: FirebaseFirestore
-    private var users: MutableList<com.example.data.User> = mutableListOf()
+    private var users: MutableList<QueryDocumentSnapshot> = mutableListOf()
     override fun onCreateView(
         inflater: LayoutInflater, container: ViewGroup?,
         savedInstanceState: Bundle?
@@ -38,14 +40,14 @@ class FragmentHome : Fragment() {
 
         mFireStore = FirebaseFirestore.getInstance()
 
-        val adapter = PostsAdapter(users, requireContext())
-        binding.rv.layoutManager = LinearLayoutManager(requireContext(), RecyclerView.VERTICAL, true)
+        val adapter = PostsAdapter(users, requireContext(), this)
+        binding.rv.layoutManager = LinearLayoutManager(requireContext(), RecyclerView.VERTICAL, false)
         binding.rv.adapter = adapter
 
         val usersRef = mFireStore.collection(Const.FS_USERS)
 
         lifecycleScope.launch(Dispatchers.IO) {
-            val updatedUsers: MutableList<com.example.data.User> = mutableListOf()
+            val updatedUsers: MutableList<QueryDocumentSnapshot> = mutableListOf()
             var size = 0
 
             usersRef.get()
@@ -54,7 +56,7 @@ class FragmentHome : Fragment() {
                         val user = userSnapshot.toObject(com.example.data.User::class.java)
                         if (user.posts.size > 0) {
                             size += user.posts.size
-                            updatedUsers.add(user)
+                            updatedUsers.add(userSnapshot)
                         }
                     }
 
@@ -69,7 +71,9 @@ class FragmentHome : Fragment() {
         }
 
         return view
+    }
 
-
+    override fun onLikeButtonClickListener(binding: ActivityMainFragmentHomeListItemBinding) {
+        // add the user id when like button is clicked in post's likes.
     }
 }

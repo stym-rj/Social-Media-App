@@ -19,25 +19,31 @@ import kotlinx.coroutines.withContext
 class PostsViewHolder (
     private val binding: ActivityMainFragmentHomeListItemBinding
 ): ViewHolder(binding.root) {
-    fun bind(user: User, post: Post, context: Context) {
+    fun bind(user: User, post: Post, context: Context, listener: MyItemClickListener) {
         Log.d("check1", user.toString())
-            binding.tvName.text = user.fullName
-            Glide
-                .with(context)
-                .load(user.profilePic)
-                .into(binding.ivProfilePic)
-            Glide
-                .with(context)
-                .load(post.imageUrl)
-                .into(binding.ivPost)
-            binding.tvNoOfLikes.text = "${post.likes.size} Likes"
-            binding.tvCaption.text = post.caption
+        binding.tvName.text = user.fullName
+        Glide
+            .with(context)
+            .load(user.profilePic)
+            .into(binding.ivProfilePic)
+        Glide
+            .with(context)
+            .load(post.imageUrl)
+            .into(binding.ivPost)
+        binding.tvNoOfLikes.text = "${post.likes.size} Likes"
+        binding.tvCaption.text = post.caption
+
+        // like button click listener
+        binding.ivLike.setOnClickListener {
+            listener.onLikeButtonClickListener(binding)
+        }
     }
 }
 
 class PostsAdapter(
-    private var users: List<User>,
+    private var users: List<QueryDocumentSnapshot>,
     private val context: Context,
+    private val listener: MyItemClickListener,
     private var size: Int = 0,
     private var userIndex: Int = 0,
     private var postIndex: Int = 0
@@ -50,17 +56,23 @@ class PostsAdapter(
     override fun getItemCount() = size
 
     override fun onBindViewHolder(holder: PostsViewHolder, position: Int) {
-        holder.bind(users[userIndex], users[userIndex].posts[postIndex], context)
+        val user = users[userIndex].toObject(User::class.java)
+        holder.bind(user, user.posts[postIndex], context, listener)
         postIndex++
-        if (postIndex >= users[userIndex].posts.size) {
+        if (postIndex >= user.posts.size) {
             postIndex = 0
             userIndex++
         }
     }
 
-    fun updateData(newList: MutableList<User>, newSize: Int) {
+    fun updateData(newList: MutableList<QueryDocumentSnapshot>, newSize: Int) {
         users = newList
         size = newSize
         notifyDataSetChanged()
     }
+}
+
+
+interface MyItemClickListener {
+    fun onLikeButtonClickListener(binding: ActivityMainFragmentHomeListItemBinding)
 }
