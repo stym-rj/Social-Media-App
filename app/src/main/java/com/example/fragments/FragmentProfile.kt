@@ -2,45 +2,53 @@ package com.example.fragments
 
 import android.net.Uri
 import android.os.Bundle
+import android.util.Log
 import androidx.fragment.app.Fragment
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
-import android.widget.GridLayout
 import android.widget.Toast
 import androidx.activity.result.PickVisualMediaRequest
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.lifecycle.lifecycleScope
 import androidx.recyclerview.widget.GridLayoutManager
+import androidx.recyclerview.widget.LinearLayoutManager
 import androidx.recyclerview.widget.RecyclerView
 import com.bumptech.glide.Glide
 import com.example.data.User
 import com.example.socialmediaapp.databinding.ActivityMainFragmentProfileBinding
-import com.example.socialmediaapp.databinding.ActivityMainFragmentProfileBottomSheetBinding
+import com.example.socialmediaapp.databinding.ActivityMainFragmentProfileEditProfileBottomSheetBinding
+import com.example.socialmediaapp.databinding.ActivityMainFragmentProfileFollowersBottomSheetBinding
+import com.example.socialmediaapp.databinding.ActivityMainFragmentProfileFollowingsBottomSheetBinding
 import com.example.utils.Const
+import com.example.utils.FollowButtonClickListener
 import com.example.utils.ProfileFragPostAdapter
+import com.example.utils.SearchFragAdapter
 import com.google.android.material.bottomsheet.BottomSheetDialog
 import com.google.firebase.auth.FirebaseAuth
 import com.google.firebase.firestore.DocumentReference
+import com.google.firebase.firestore.FieldPath
 import com.google.firebase.firestore.FirebaseFirestore
+import com.google.firebase.firestore.QueryDocumentSnapshot
 import com.google.firebase.storage.FirebaseStorage
 import com.google.firebase.storage.StorageReference
+import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
-import java.net.URI
+import kotlinx.coroutines.tasks.await
+import kotlinx.coroutines.withContext
 import java.util.UUID
-import kotlin.concurrent.thread
 
-class FragmentProfile : Fragment() {
+class FragmentProfile : Fragment(), FollowButtonClickListener {
 
     private val binding by lazy {
         ActivityMainFragmentProfileBinding.inflate(layoutInflater)
     }
 
+    private lateinit var editBottomSheetBinding: ActivityMainFragmentProfileEditProfileBottomSheetBinding
 
-    private val bottomSheetBinding by lazy {
-        ActivityMainFragmentProfileBottomSheetBinding.inflate(layoutInflater)
-    }
+    private lateinit var followersBottomSheetBinding: ActivityMainFragmentProfileFollowersBottomSheetBinding
+    private lateinit var followingBottomSheetBinding: ActivityMainFragmentProfileFollowingsBottomSheetBinding
 
     private lateinit var auth: FirebaseAuth
     private lateinit var mFireStore: FirebaseFirestore
@@ -75,6 +83,14 @@ class FragmentProfile : Fragment() {
             showEditBottomSheet(binding)
         }
 
+        binding.tvFollowersSize.setOnClickListener {
+            showFollowersBottomSheet()
+        }
+
+        binding.tvFollowingsSize.setOnClickListener {
+            showFollowingBottomSheet()
+        }
+
 
         return view
     }
@@ -107,9 +123,136 @@ class FragmentProfile : Fragment() {
         }
     }
 
-    private fun setBottomSheetProfilePic(chosenProfilePic: Uri) {
-        bottomSheetBinding.ivEditProfilePic.setImageURI(chosenProfilePic)
+    private fun showFollowersBottomSheet() {
+        followersBottomSheetBinding = ActivityMainFragmentProfileFollowersBottomSheetBinding.inflate(layoutInflater, null, false)
+        val dialog = BottomSheetDialog(requireContext())
+        dialog.setContentView(followersBottomSheetBinding.root)
+
+        dialog.show()
+
+        getBottomSheetList(Const.FS_USER_FOLLOWERS, followersBottomSheetBinding.rv)
+
     }
+
+    private fun showFollowingBottomSheet() {
+        followingBottomSheetBinding = ActivityMainFragmentProfileFollowingsBottomSheetBinding.inflate(layoutInflater, null, false)
+        val dialog = BottomSheetDialog(requireContext())
+        dialog.setContentView(followingBottomSheetBinding.root)
+
+        dialog.show()
+
+        getBottomSheetList(Const.FS_USER_FOLLOWING, followingBottomSheetBinding.rv)
+    }
+
+    private fun getBottomSheetList(parameter: String, rv: RecyclerView) {
+        val usersReference = mFireStore.collection(Const.FS_USERS).document(auth.currentUser?.uid ?: "")
+
+        var users: MutableList<QueryDocumentSnapshot> = mutableListOf()
+
+        // adapter
+        val adapter = SearchFragAdapter(users, auth.currentUser?.uid!!, requireContext(), this)
+        rv.adapter = adapter
+        rv.layoutManager = LinearLayoutManager(requireContext(), RecyclerView.VERTICAL, false)
+
+
+        CoroutineScope(Dispatchers.IO).launch {
+            val followers = usersReference.get().await()
+            val followersListRef = followers.get(parameter) as? List<String>
+
+            if (followersListRef != null) {
+                val updatedUsers: MutableList<QueryDocumentSnapshot> = mutableListOf()
+                val followerRef = mFireStore
+                    .collection(Const.FS_USERS)
+                    .whereIn(FieldPath.documentId(), followersListRef)
+                    .get().await()
+                for (follower in followerRef) {
+                    updatedUsers.add(follower)
+                }
+                withContext(Dispatchers.Main) {
+                    users.clear()
+                    users.addAll(updatedUsers)
+                    adapter.updateData(users)
+                }
+            }
+        }
+    }
+
+    override fun onFollowButtonClicked(user: QueryDocumentSnapshot, followed: Boolean) {
+        if (followed) {
+            auth = FirebaseAuth.getInstance()
+            val usersReference = mFireStore.collection(Const.FS_USERS).document(auth.currentUser?.uid!!)
+            usersReference.get()
+                .addOnSuccessListener { data ->
+                    // removing from current user's followings list
+                    data.toObject(User::class.java)?.let {
+                        it.followings.remove(user.id)
+                        usersReference.set(it)
+                    }
+
+                    // removing from followed user's followers list
+                    user.toObject(User::class.java).let {
+                        it.followers.remove(auth.currentUser?.uid!!)
+                        mFireStore.collection(Const.FS_USERS).document(user.id)
+                            .set(it)
+                    }
+                }
+        } else {
+            auth = FirebaseAuth.getInstance()
+            val usersReference = mFireStore.collection(Const.FS_USERS).document(auth.currentUser?.uid!!)
+            usersReference.get()
+                .addOnSuccessListener { data ->
+                    // adding to current user's followings list
+                    data.toObject(User::class.java)?.let {
+                        it.followings.add(user.id)
+                        usersReference.set(it)
+                    }
+
+                    // adding to followed user's followers list
+                    user.toObject(User::class.java).let {
+                        it.followers.add(auth.currentUser?.uid!!)
+                        mFireStore.collection(Const.FS_USERS).document(user.id)
+                            .set(it)
+                    }
+                }
+        }
+    }
+
+    private fun setBottomSheetProfilePic(chosenProfilePic: Uri) {
+        editBottomSheetBinding.ivEditProfilePic.setImageURI(chosenProfilePic)
+    }
+
+
+    private fun showEditBottomSheet(binding: ActivityMainFragmentProfileBinding) {
+        editBottomSheetBinding = ActivityMainFragmentProfileEditProfileBottomSheetBinding.inflate(layoutInflater, null, false)
+        val dialog = BottomSheetDialog(requireContext())
+        dialog.setContentView(editBottomSheetBinding.root)
+
+        dialog.show()
+
+        editBottomSheetBinding.etEditName.setText(binding.tvName.text)
+        editBottomSheetBinding.etEditAbout.setText(binding.tvAbout.text)
+
+
+        editBottomSheetBinding.ivEditProfilePic.setOnClickListener {
+            // launching intent for picking image from gallery
+            profileImagePicker.launch(PickVisualMediaRequest(ActivityResultContracts.PickVisualMedia.ImageOnly))
+        }
+
+        editBottomSheetBinding.btnDone.setOnClickListener {
+            // TODO: edit name, profile-pic and about and update this on fire-store.
+            currentUser.fullName = editBottomSheetBinding.etEditName.text.toString()
+            currentUser.about = editBottomSheetBinding.etEditAbout.text.toString()
+            userReference.set(currentUser)
+            chosenProfilePic?.let {
+                updateProfilePic(it)
+            }
+            setFragmentDetails()
+
+
+            dialog.dismiss()
+        }
+    }
+
 
     private fun setFragmentDetails() {
         if (currentUser.profilePic.isNotBlank()) {
@@ -121,36 +264,6 @@ class FragmentProfile : Fragment() {
         binding.tvFollowersSize.text = currentUser.followers.size.toString()
         binding.tvFollowingsSize.text = currentUser.followings.size.toString()
         binding.tvPostSize.text = currentUser.posts.size.toString()
-    }
-
-    private fun showEditBottomSheet(binding: ActivityMainFragmentProfileBinding) {
-        val dialog = BottomSheetDialog(requireContext())
-        dialog.setContentView(bottomSheetBinding.root)
-
-        dialog.show()
-
-        bottomSheetBinding.etEditName.setText(binding.tvName.text)
-        bottomSheetBinding.etEditAbout.setText(binding.tvAbout.text)
-
-
-        bottomSheetBinding.ivEditProfilePic.setOnClickListener {
-            // launching intent for picking image from gallery
-            profileImagePicker.launch(PickVisualMediaRequest(ActivityResultContracts.PickVisualMedia.ImageOnly))
-        }
-
-        bottomSheetBinding.btnDone.setOnClickListener {
-            // TODO: edit name, profile-pic and about and update this on fire-store.
-            currentUser.fullName = bottomSheetBinding.etEditName.text.toString()
-            currentUser.about = bottomSheetBinding.etEditAbout.text.toString()
-            userReference.set(currentUser)
-            chosenProfilePic?.let {
-                updateProfilePic(it)
-            }
-            setFragmentDetails()
-
-
-            dialog.dismiss()
-        }
     }
 
     private fun updateProfilePic (uri: Uri) {

@@ -61,7 +61,6 @@ class FragmentSearch : Fragment(), FollowButtonClickListener {
                         if (user.id == auth.currentUser?.uid!!) {
                             continue
                         }
-//                        users.add(user.toObject(User::class.java))
                         users.add(user)
 
                         Log.d("check", user.toObject(User::class.java).toString())
