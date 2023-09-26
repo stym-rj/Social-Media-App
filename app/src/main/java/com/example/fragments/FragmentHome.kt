@@ -57,27 +57,26 @@ class FragmentHome : Fragment(), MyItemClickListener {
         val postRef = mFireStore.collection(Const.FS_POSTS)
 
         lifecycleScope.launch(Dispatchers.IO) {
-
             postRef.get()
                 .addOnSuccessListener { data ->
                     val updatedUsers: MutableList<DocumentSnapshot> = mutableListOf()
                     val updatedPosts: MutableList<Post> = mutableListOf()
 
-                    for (postSnapshot in data) {
-                        postSnapshot.toObject(IndividualPost::class.java).let { postData ->
-                            updatedPosts.add(postData.post)
-                            Log.d("check100", postData.userRef)
-                            CoroutineScope(Dispatchers.IO).launch {
+
+                    CoroutineScope(Dispatchers.IO).launch {
+                        for (postSnapshot in data) {
+                            postSnapshot.toObject(IndividualPost::class.java).let { postData ->
+                                updatedPosts.add(postData.post)
                                 val userRequest = usersRef.document(postData.userRef).get().await()
                                 updatedUsers.add(userRequest)
-                                users.clear()
-                                posts.clear()
-                                users.addAll(updatedUsers)
-                                posts.addAll(updatedPosts)
-                                withContext(Dispatchers.Main) {
-                                    adapter.updateData(users, posts)
-                                }
                             }
+                        }
+                        users.clear()
+                        posts.clear()
+                        users.addAll(updatedUsers)
+                        posts.addAll(updatedPosts)
+                        withContext(Dispatchers.Main) {
+                            adapter.updateData(users, posts)
                         }
 
                     }
@@ -86,6 +85,8 @@ class FragmentHome : Fragment(), MyItemClickListener {
 
                 }
         }
+
+        Log.d("hellloo", R.mipmap.default_profile_pic_2.toString())
 
         return view
     }
@@ -100,19 +101,19 @@ class FragmentHome : Fragment(), MyItemClickListener {
             val result = mFireStore.collection(Const.FS_USERS).document(userRef.id).get().await()
 
             result.toObject(User::class.java)?.let { data ->
-                    if (data.posts[indexOfPost].likes.contains(mAuth.currentUser?.uid)) {
-                        withContext(Dispatchers.Main) {
-                            binding.ivLike.setImageResource(R.drawable.ic_like_normal)
-                            binding.tvNoOfLikes.text = "${data.posts[indexOfPost].likes.size - 1} Likes"
-                        }
-                        data.posts[indexOfPost].likes.remove(mAuth.currentUser?.uid)
-                    } else {
-                        data.posts[indexOfPost].likes.add(mAuth.currentUser?.uid ?: "a")
-                        withContext(Dispatchers.Main) {
-                            binding.ivLike.setImageResource(R.drawable.ic_like_clicked)
-                            binding.tvNoOfLikes.text = "${data.posts[indexOfPost].likes.size} Likes"
-                        }
+                if (data.posts[indexOfPost].likes.contains(mAuth.currentUser?.uid)) {
+                    withContext(Dispatchers.Main) {
+                        binding.ivLike.setImageResource(R.drawable.ic_like_normal)
+                        binding.tvNoOfLikes.text = "${data.posts[indexOfPost].likes.size - 1} Likes"
                     }
+                    data.posts[indexOfPost].likes.remove(mAuth.currentUser?.uid)
+                } else {
+                    data.posts[indexOfPost].likes.add(mAuth.currentUser?.uid ?: "a")
+                    withContext(Dispatchers.Main) {
+                        binding.ivLike.setImageResource(R.drawable.ic_like_clicked)
+                        binding.tvNoOfLikes.text = "${data.posts[indexOfPost].likes.size} Likes"
+                    }
+                }
 
                 val updatePost = IndividualPost(post = data.posts[indexOfPost], userRef = userRef.id)
                 mFireStore.collection(Const.FS_POSTS).document(data.posts[indexOfPost].createdAt.toString())

@@ -16,17 +16,20 @@ import androidx.recyclerview.widget.LinearLayoutManager
 import androidx.recyclerview.widget.RecyclerView
 import com.bumptech.glide.Glide
 import com.example.data.User
+import com.example.socialmediaapp.R
 import com.example.socialmediaapp.databinding.ActivityMainFragmentProfileBinding
 import com.example.socialmediaapp.databinding.ActivityMainFragmentProfileEditProfileBottomSheetBinding
 import com.example.socialmediaapp.databinding.ActivityMainFragmentProfileFollowersBottomSheetBinding
 import com.example.socialmediaapp.databinding.ActivityMainFragmentProfileFollowingsBottomSheetBinding
 import com.example.utils.Const
 import com.example.utils.FollowButtonClickListener
+import com.example.utils.PostClickListener
 import com.example.utils.ProfileFragPostAdapter
 import com.example.utils.SearchFragAdapter
 import com.google.android.material.bottomsheet.BottomSheetDialog
 import com.google.firebase.auth.FirebaseAuth
 import com.google.firebase.firestore.DocumentReference
+import com.google.firebase.firestore.DocumentSnapshot
 import com.google.firebase.firestore.FieldPath
 import com.google.firebase.firestore.FirebaseFirestore
 import com.google.firebase.firestore.QueryDocumentSnapshot
@@ -37,9 +40,10 @@ import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.tasks.await
 import kotlinx.coroutines.withContext
+import java.text.FieldPosition
 import java.util.UUID
 
-class FragmentProfile : Fragment(), FollowButtonClickListener {
+class FragmentProfile : Fragment(), FollowButtonClickListener, PostClickListener {
 
     private val binding by lazy {
         ActivityMainFragmentProfileBinding.inflate(layoutInflater)
@@ -106,7 +110,7 @@ class FragmentProfile : Fragment(), FollowButtonClickListener {
                         currentUser = usr
                         setFragmentDetails()
                         // setting up the recycler view
-                        val adapter = ProfileFragPostAdapter(currentUser.posts, requireContext())
+                        val adapter = ProfileFragPostAdapter(currentUser.posts, data, this@FragmentProfile, requireContext())
                         binding.rv.layoutManager = GridLayoutManager(
                             requireContext(),
                             3,
@@ -279,5 +283,12 @@ class FragmentProfile : Fragment(), FollowButtonClickListener {
             .addOnFailureListener {
 
             }
+    }
+
+    override fun onPostClickListener(user: DocumentSnapshot, position: Int) {
+        val fragment = FragmentProfileFullViewPost.newInstance(user.id, position)
+        requireActivity().supportFragmentManager.beginTransaction()
+            .replace(R.id.container, fragment)
+            .commit()
     }
 }

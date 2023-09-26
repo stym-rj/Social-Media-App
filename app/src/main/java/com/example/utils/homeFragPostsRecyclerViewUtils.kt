@@ -17,10 +17,14 @@ class PostsViewHolder (
 ): ViewHolder(binding.root) {
     fun bind(user: DocumentSnapshot, post: Post, currUserID: String, context: Context, listener: MyItemClickListener) {
         user.toObject(User::class.java)?.let { data->
-            Glide
-                .with(context)
-                .load(data.profilePic)
-                .into(binding.ivProfilePic)
+            if (data.profilePic == "") {
+                binding.ivProfilePic.setImageResource(R.mipmap.default_profile_pic_2)
+            } else {
+                Glide
+                    .with(context)
+                    .load(data.profilePic)
+                    .into(binding.ivProfilePic)
+            }
             Glide
                 .with(context)
                 .load(post.imageUrl)
@@ -46,8 +50,8 @@ class PostsViewHolder (
 }
 
 class PostsAdapter(
-    private var users: List<DocumentSnapshot>,
-    private var posts: List<Post>,
+    private var users: MutableList<DocumentSnapshot>,
+    private var posts: MutableList<Post>,
     private val currUserID: String,
     private val context: Context,
     private val listener: MyItemClickListener,
