@@ -1,3 +1,19 @@
+# What does the App do?
+* Login authentication (Sign in, Sign out, Sign up).
+* Allows users to post content, view and like other users posts.
+* Search and follow/ unfollow other users.
+* View/ Update own profile, own posts, count of posts, followers and followings. 
+
+# Tech
+* Kotlin (Backend)
+* XML (Frontend)
+* Android Studio (IDE)
+* Firebase Authentication (Authentication)
+* Firebase Firestore (Database)
+* Firebase storage (File Storage)                                                                                                                                                                                                                                                                                                                                                   
+
+
+
 # App Download Link
 [Click here to Download][1]
 
